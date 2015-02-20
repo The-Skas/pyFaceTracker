@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 draw_str(img, (20, 80), 'orientation: %.1f, %.1f, %.1f' % tracker.getOrientation())
                 tracker.getScale()
                 tracker.getOrientation()
-                img = tracker.draw(img, conns, trigs)
+                # img = tracker.draw(img, conns, trigs)
 
 
             else:
@@ -85,25 +85,27 @@ if __name__ == '__main__':
             MIN_Y -= 10
             MIN_X -= 10
             # Get LEFT_EYE INTO Image
-            subset_img = gray[MIN_Y:MAX_Y, MIN_X:MAX_X]
+            subset_img = img[MIN_Y:MAX_Y, MIN_X:MAX_X]
             # Transpose suc that (y,x) -> (x,y)
-            _img = Image(np.transpose(subset_img))
-            bm = BlobMaker() # create the blob extractor
-            # invert the image so the pupil is white, threshold the image, and invert again
-            # and then extract the information from the image
-            blobs = _img.findBlobs()
+            _img = Image(subset_img.transpose(1,0,2))
+
+            _eye_left=_img.colorDistance(SimpleCV.Color.BLACK).dilate(3) 
+            # _eye_left=_eye_left.stretch(120,140).invert()
+
+            # invert the image so the pupil is white, 
+            # Blobs track the white!
+            blobs = _eye_left.invert().findBlobs(minsize=1,threshval=100)
+            pdb.set_trace()
+
             if(len(blobs)>0): # if we got a blob
-                blobs[0].draw() # the zeroth blob is the largest blob - draw it
-                locationStr = "("+str(blobs[0].x)+","+str(blobs[0].y)+")"
+                blobs[0].show() # the zeroth blob is the largest blob - draw it
                 # write the blob's centroid to the image
                 # _img.dl().text(locationStr,(0,0),color=Color.RED)
                 # save the image
     
                 _img.save("eye_only_1.png")
                 # and show us the result.
-                pdb.set_trace()
 
-                _img.show()
             # END MY CODE
             # draw_str(img, (20, 20), 'time: %.1f ms' % (dt*1000))
             # cv2.rectangle(img, (MIN_X, MIN_Y), (MAX_X, MAX_Y), (255,0,0), 2)
